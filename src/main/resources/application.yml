@@ -1,0 +1,75 @@
+spring:
+  application:
+    name: kotlin-spring-advanced
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/demo_db
+    username: demo_user
+    password: demo_password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    show-sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: userEvent:com.example.demo.dto.UserEvent,orderEvent:com.example.demo.dto.OrderEvent
+    consumer:
+      group-id: demo-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: userEvent:com.example.demo.dto.UserEvent,orderEvent:com.example.demo.dto.OrderEvent
+      auto-offset-reset: earliest
+    topics:
+      user-events: user-events
+      order-events: order-events
+
+server:
+  port: 8081
+  error:
+    include-message: always
+    include-binding-errors: always
+
+logging:
+  level:
+    com.example: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: INFO
+    org.springframework.kafka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/application.log
+
+app:
+  kafka:
+    user-topic: user-events
+    order-topic: order-events
+  cache:
+    user-cache-ttl: 3600
+    order-cache-ttl: 1800
